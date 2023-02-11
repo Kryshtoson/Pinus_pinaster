@@ -1,7 +1,9 @@
 #' cleans data and stores them into:
 #' 
 #' produces: 1 basic map and 2 ordination
-
+# -------------------------------------------------------------------------
+library(patchwork)
+library(writexl)
 library(ggrepel)
 library(vegan)
 library(tidyverse)
@@ -14,7 +16,7 @@ library(goeveg)
 Italy <- ne_countries(scale = "medium", returnclass = "sf") %>% 
   filter(admin == 'Italy')
 
-selected <- read_xlsx('spe.xlsx') %>% mutate_all(as.numeric) %>% 
+selected <- read_xlsx('orig_data\\spe.xlsx') %>% mutate_all(as.numeric) %>% 
   pivot_longer(-1) %>% 
   filter(grepl('_T1', name)) %>% 
   filter(value != 0) %>% 
@@ -26,14 +28,14 @@ selected <- read_xlsx('spe.xlsx') %>% mutate_all(as.numeric) %>%
   filter(`TRUE` > `FALSE`) %>% 
   select(PlotID)
 
-spe <- read_xlsx('spe.xlsx') %>%
+spe <- read_xlsx('orig_data\\spe.xlsx') %>%
   filter(PlotID %in% selected[[1]]) %>%
   mutate_all(as.numeric) %>%
   pivot_longer(-1) %>%
   mutate(name = gsub('_T0', '', name),
          name = gsub('_T1', '', name)) %>%
   rename(species = name) %>%
-  left_join(read_xlsx('spp_merge.xlsx') %>%
+  left_join(read_xlsx('orig_data\\spp_merge.xlsx') %>%
               mutate(species_new = ifelse(is.na(species_new),
                                           species,
                                           species_new))) %>%
@@ -46,28 +48,38 @@ spe <- read_xlsx('spe.xlsx') %>%
   filter(noobs > 1) %>%
   select(-noobs) %>%
   pivot_wider(names_from = species_new, values_fill = 0)
-cs <- colSums((read_xlsx('spe.xlsx')[-1]) != 0)
+
+write_xlsx(spe, 'meta\\species_data_for_analysis.xlsx')
+
+cs <- colSums((read_xlsx('orig_data\\spe.xlsx')[-1]) != 0)
 sp_counts <- tibble(species = names(cs),
                     noobs = cs)
 
 twin <- twinspan(spe)
 
-head <- read_xlsx('head.xlsx') %>%
+head <- read_xlsx('orig_data\\head.xlsx') %>%
   filter(PlotID %in% selected[[1]]) %>% 
   st_as_sf(coords = c('Longitude', 'Latitude'), crs = 4326) %>% 
-  mutate(twin = cut(twin, 2))
+  mutate(twin = cut(twin, 3))
 
 ggplot() + 
   geom_sf(data = Italy) + 
-  geom_sf(data = head, aes(colour = factor(twin)), size = 3, shape = 21, stroke = 1.2) +
+  geom_sf(data = head, aes(colour = factor(twin)), 
+          size = 3, shape = 21, stroke = 1.2) +
   scale_colour_discrete(name = 'Twinspan group') +
   theme_bw() +
   coord_sf(xlim = c(7, 12), ylim = c(42, 45), expand = FALSE) +
   theme(legend.position = c(1,1),
         legend.background = element_blank(),
         legend.justification = c(1,1))
-ggsave('Pinpir_map.svg', height = 6, width = 8)
 
+ggsave('outputs\\Pinpir_map_3-divs.svg', height = 6, width = 8)
+
+head %>% 
+  mutate(as_tibble(st_coordinates(.))) %>% 
+  as_tibble() %>% 
+  dplyr::select(PlotID, twin, X, Y) %>% 
+  write_xlsx('meta\\header_data.xlsx')
 # -------------------------------------------------------------------------
 cap <- capscale(sqrt(spe) ~ 1, distance = 'bray', sqrt.dist = T)
 cap_lab <- paste0('PCo', 1:2, ' (', round((cap$CA$eig/cap$tot.chi)[1:2]*100, 2), '%)')
@@ -79,6 +91,7 @@ a <- bind_cols(head, scores(cap, choices = 1:3)$sites) %>%
   labs(x = cap_lab[1], y = cap_lab[2]) +
   geom_point(aes(colour = factor(twin), size = y)) +
   scale_colour_discrete(name = 'Twinspan group') +
+  scale_size_continuous('Latitude') +
   theme_bw() +
   theme(legend.position = c(0,1),
         legend.justification = c(0,1),
@@ -94,4 +107,5 @@ b <- sp_sc %>% left_join(sp_counts %>%
   geom_point(size = 3, shape = 3) + theme_bw()
 b
 
-ggsave('Pinpir_ordination.svg', a+b, height = 8, width =15)
+ggsave('outputs\\Pinpir_ordination_3-div.svg', a+b, height = 8, width =15)
+
