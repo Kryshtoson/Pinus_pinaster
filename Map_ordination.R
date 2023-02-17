@@ -10,8 +10,6 @@ library(tidyverse)
 library(readxl)
 library(twinspan)
 library(sf)
-library(rnaturalearth)
-library(goeveg) 
 
 Italy <- ne_countries(scale = "medium", returnclass = "sf") %>% 
   filter(admin == 'Italy')
@@ -60,26 +58,17 @@ twin <- twinspan(spe)
 head <- read_xlsx('orig_data\\head.xlsx') %>%
   filter(PlotID %in% selected[[1]]) %>% 
   st_as_sf(coords = c('Longitude', 'Latitude'), crs = 4326) %>% 
-  mutate(twin = cut(twin, 3))
-
-ggplot() + 
-  geom_sf(data = Italy) + 
-  geom_sf(data = head, aes(colour = factor(twin)), 
-          size = 3, shape = 21, stroke = 1.2) +
-  scale_colour_discrete(name = 'Twinspan group') +
-  theme_bw() +
-  coord_sf(xlim = c(7, 12), ylim = c(42, 45), expand = FALSE) +
-  theme(legend.position = c(1,1),
-        legend.background = element_blank(),
-        legend.justification = c(1,1))
-
-ggsave('outputs\\Pinpir_map_3-divs.svg', height = 6, width = 8)
+  mutate(twin4 = cut(twin, 4),
+         twin3 = cut(twin, 3),
+         twin2 = cut(twin, 2),
+         twin1 = cut(twin, 1))
 
 head %>% 
   mutate(as_tibble(st_coordinates(.))) %>% 
   as_tibble() %>% 
-  dplyr::select(PlotID, twin, X, Y) %>% 
+  dplyr::select(PlotID, twin4, twin3, twin2, twin1, X, Y) %>% 
   write_xlsx('meta\\header_data.xlsx')
+
 # -------------------------------------------------------------------------
 cap <- capscale(sqrt(spe) ~ 1, distance = 'bray', sqrt.dist = T)
 cap_lab <- paste0('PCo', 1:2, ' (', round((cap$CA$eig/cap$tot.chi)[1:2]*100, 2), '%)')
@@ -89,7 +78,7 @@ a <- bind_cols(head, scores(cap, choices = 1:3)$sites) %>%
   mutate(y = st_coordinates(.)[,2]) %>%
   ggplot(aes(MDS1, MDS2)) +
   labs(x = cap_lab[1], y = cap_lab[2]) +
-  geom_point(aes(colour = factor(twin), size = y)) +
+  geom_point(aes(colour = factor(twin2), size = y)) +
   scale_colour_discrete(name = 'Twinspan group') +
   scale_size_continuous('Latitude') +
   theme_bw() +
@@ -108,4 +97,3 @@ b <- sp_sc %>% left_join(sp_counts %>%
 b
 
 ggsave('outputs\\Pinpir_ordination_3-div.svg', a+b, height = 8, width =15)
-
