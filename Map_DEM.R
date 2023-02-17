@@ -43,3 +43,7 @@ ggplot() +
         legend.justification = c(0,0))
 
 ggsave('outputs\\Pinpir_map_DEM_3-divs.svg', height = 6, width = 8)
+
+
+library(tidyverse)
+cross2(paste0('F', rep(1:7)), paste0('P', rep(1:6))) %>%  map_chr(paste0, collapse = "")
