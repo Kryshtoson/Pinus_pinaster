@@ -1,3 +1,6 @@
+library(rnaturalearth)
+library(readxl)
+library(sf)
 library(ggnewscale)
 library(raster)
 library(tidyverse)
@@ -26,14 +29,17 @@ ggplot() +
   ggnewscale::new_scale_fill() +
   geom_raster(data = dem_df, aes(x = x, y = y, fill = DEM.EUROPE), alpha = .5,
               show.legend = F) +
-  geom_sf(data = Italy, fill = NA, linewidth = .5) + 
-  geom_sf(data = head, aes(colour = factor(twin)), size = 3, shape = 21, stroke = 1.2) +
   scale_fill_gradientn(colours = palette_dem,              
                        name = "Elevation") +
-  scale_colour_discrete(name = 'Twinspan group') +
+  ggnewscale::new_scale_fill() +
+  geom_sf(data = Italy, fill = NA, linewidth = .5) + 
+  geom_sf(data = head, aes(fill = factor(twin2)), 
+          size= 3, shape = 21, stroke = 1.2) +
+  scale_fill_discrete(name = 'Twinspan group') +
   theme_bw() +
   coord_sf(xlim = c(7, 12), ylim = c(42, 45), expand = FALSE) +
   theme(legend.position = c(0,0),
+        legend.key = element_blank(),
         panel.background = element_rect(fill = '#CDF5F7'),
         legend.background = element_blank(),
         axis.title = element_blank(),
