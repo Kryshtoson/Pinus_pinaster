@@ -72,6 +72,7 @@ head %>%
   write_xlsx('meta\\header_data.xlsx')
 
 # -------------------------------------------------------------------------
+# ordination comes here 
 cap <- capscale(sqrt(spe) ~ 1, distance = 'bray', sqrt.dist = T)
 cap_lab <- paste0('PCo', 1:2, ' (', round((cap$CA$eig/cap$tot.chi)[1:2]*100, 2), '%)')
 sp_sc <- rownames_to_column(as.data.frame(scores(cap)$species), 'species') %>%
