@@ -10,7 +10,7 @@ library(tidyverse)
 library(readxl)
 library(twinspan)
 library(sf)
-
+library(rnaturalearth)
 # hello hello
 
 Italy <- ne_countries(scale = "medium", returnclass = "sf") %>% 
@@ -70,6 +70,13 @@ head %>%
   as_tibble() %>% 
   dplyr::select(PlotID, twin4, twin3, twin2, twin1, X, Y) %>% 
   write_xlsx('meta\\header_data.xlsx')
+
+# -------------------------------------------------------------------------
+# syntables
+for(i in c('twin1', 'twin2', 'twin3', 'twin4')){
+  cl <- head[[i]]
+  write_xlsx(syn_sortable(spe[-1], cl), paste0('Syntable_', i, '.xlsx'))
+}
 
 # -------------------------------------------------------------------------
 # ordination comes here 
