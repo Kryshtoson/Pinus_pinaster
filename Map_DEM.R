@@ -36,7 +36,7 @@ ggplot() +
   ggnewscale::new_scale_fill() +
   geom_sf(data = Italy, fill = NA, linewidth = .5) +
   geom_sf(data = head, aes(fill = factor(twin3), shape = Dataset),
-          size = 3, stroke = 1.2) +
+          size = 3.5, stroke = 1.05) +
   scale_shape_manual(values = c(21, 22)) +
   scale_fill_discrete(name = 'Twinspan group') +
   theme_bw() +
