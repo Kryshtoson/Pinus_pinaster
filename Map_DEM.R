@@ -11,10 +11,14 @@ library(devtools)
 Italy <- ne_countries(scale = "large", returnclass = "sf") %>%
   filter(admin == 'Italy')
 
+pinpin_shp <- st_intersection(read_sf('orig_data/Pinus_pinaster_shp/Pinus_pinaster_plg_clip.shp'),
+                   Italy)
+ggplot(pinpin_shp) +
+  geom_sf()
 head #<- read_xlsx('meta\\header_data.xlsx') %>%
 #st_as_sf(coords = c('X', 'Y'), crs = 4326)
 r <- raster("C:\\Users\\krystof\\Dropbox\\GIS_db\\DEM\\DEM-EUROPE.TIF")
-r_Italy <- raster::mask(crop(r, Italy), Italy)
+r_Italy <- raster::(crop(r, Italy), Italy)
 
 palette_dem <- c("#8FCE00", "#FFE599", "#F6B26B", "#996633", "#993300")
 r_Italy_pt <- rasterToPoints(r_Italy, spatial = TRUE)
@@ -65,9 +69,17 @@ ggplot() +
   scale_fill_gradientn(colours = palette_dem,
                        name = "Elevation") +
   ggnewscale::new_scale_fill() +
+  geom_sf(data = Italy, fill = NA, colour = 'black') +
+  geom_sf(data = pinpin_shp, alpha = .5, aes(fill = 'Distribution of P. pinaster in Italy'),
+          show.legend = F) +
   theme_void() +
-  theme(panel.background = element_rect(fill = 'white')) +
-  coord_sf(expand = F) +
+  theme(panel.background = element_rect(fill = 'white'),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 8),
+        legend.justification = c(0,0),
+  legend.position = c(0.1,0.1)) +
+  coord_sf(expand = .1) +
+  guides(fill = guide_legend(override.aes = list(size = 2))) +
   geom_rect(data = rects,
             aes(xmin = xmin, ymin = ymin,
                 xmax = xmax, ymax = ymax),
@@ -78,11 +90,10 @@ m <- ggdraw(fine) +
   {
     coarse
   },
-    x = .65,
-    y = .65,
-    width = .30,
-    height = .30
+    x = .665,
+    y = .61,
+    width = .35,
+    height = .35
   )
 
-m
 ggsave('outputs\\Pinpir_map_DEM_4-divs.svg', m, height = 6, width = 8)
