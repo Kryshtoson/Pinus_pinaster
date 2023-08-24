@@ -75,20 +75,25 @@ spe_bin <- spe[-1] |> mutate_all(function(x) { ifelse(x != 0, 1, 0) })
 phi <- multipatt(spe_bin, groups, func = "r.g",
                  control = how(nperm = 1), duleg = T)
 
+bind_cols(spe[1], spe_bin) |>
+              pivot_longer(-1) |>
+  left_join(head) |>
+ group_by(species = name, name = twin3) |>
+              summarise(n_occ = sum(value)) -> occ_within_groups
+
 rownames_to_column(as.data.frame(round(phi$str, 3)), 'species') |>
   as_tibble() |>
   pivot_longer(-1) |>
-  left_join(bind_cols(spe[1], spe_bin) |>
-              pivot_longer(-1) |>
-              group_by(species = name) |>
-              summarise(n = sum(value))) |>
+  mutate(name = as.numeric(name)) |>
+  left_join(occ_within_groups) |>
   group_by(name) |>
-  arrange(as.numeric(name), -value) |>
+  arrange(name, -value) |>
   mutate(value = round(value * 100),
          value = ifelse(value > 0, value, 0)) |>
-  dplyr::select(species, name, value) |>
+  dplyr::select(species, name, value, n_occ) |>
+  mutate(value = paste0(value, ' (', n_occ,')')) |>
+  dplyr::select(-n_occ) |>
   pivot_wider() |>
-  print(n = 100) |>
   write_csv('synoptic_table_twin3.csv')
 
 summary(phi)
