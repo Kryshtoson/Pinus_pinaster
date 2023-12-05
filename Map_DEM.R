@@ -1,3 +1,4 @@
+library(cowplot)
 library(rnaturalearth)
 library(readxl)
 library(sf)
@@ -15,10 +16,11 @@ pinpin_shp <- st_intersection(read_sf('orig_data/Pinus_pinaster_shp/Pinus_pinast
                    Italy)
 ggplot(pinpin_shp) +
   geom_sf()
-head #<- read_xlsx('meta\\header_data.xlsx') %>%
-#st_as_sf(coords = c('X', 'Y'), crs = 4326)
-r <- raster("C:\\Users\\krystof\\Dropbox\\GIS_db\\DEM\\DEM-EUROPE.TIF")
-r_Italy <- raster::(crop(r, Italy), Italy)
+head <- read_xlsx('meta/header_data.xlsx') |>
+  st_as_sf(coords = c('X', 'Y'), crs = 4326)
+#r <- raster("C:\\Users\\krystof\\Dropbox\\GIS_db\\DEM\\DEM-EUROPE.TIF")
+r <- raster(r'(C:\Users\krystof\Dropbox\documents\GIS_db\DEM\DEM-EUROPE.tif)')
+r_Italy <- mask(crop(r, Italy), Italy)
 
 palette_dem <- c("#8FCE00", "#FFE599", "#F6B26B", "#996633", "#993300")
 r_Italy_pt <- rasterToPoints(r_Italy, spatial = TRUE)
@@ -39,9 +41,9 @@ ggplot() +
                        name = "Elevation") +
   ggnewscale::new_scale_fill() +
   geom_sf(data = Italy, fill = NA, linewidth = .5) +
-  geom_sf(data = head, aes(fill = factor(twin3), shape = Dataset),
-          size = 3.5, stroke = 1.05) +
-  scale_shape_manual(values = c(21, 22)) +
+  geom_sf(data = head, aes(fill = factor(twin2)), #shape = Dataset),
+          size = 3.5, stroke = 1.05, shape = 21) +
+  # scale_shape_manual(values = c(21, 22)) +
   scale_fill_discrete(name = 'Twinspan group') +
   theme_bw() +
   coord_sf(xlim = c(7, 12), ylim = c(42, 45), expand = FALSE) +
@@ -96,4 +98,4 @@ m <- ggdraw(fine) +
     height = .35
   )
 
-ggsave('outputs\\Pinpir_map_DEM_4-divs.svg', m, height = 6, width = 8)
+ggsave('outputs\\Pinpir_map_DEM_2-divs.svg', m, height = 6, width = 8)
